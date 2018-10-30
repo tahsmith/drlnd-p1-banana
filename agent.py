@@ -80,10 +80,10 @@ class Agent:
         self.update_target()
 
     def bellman_eqn_error(self, states, actions, rewards, next_states, dones):
-        '''Double DQN error - use the control network to get the best action
+        """Double DQN error - use the control network to get the best action
         and apply the target network to it to get the target reward which is
         used for the bellman eqn error.
-        '''
+        """
         self.q_network_control.eval()
         with torch.no_grad():
             a_max = self.q_network_control(next_states).argmax(1).unsqueeze(1)

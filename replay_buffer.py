@@ -1,6 +1,3 @@
-import random
-from collections import deque, namedtuple
-
 import torch
 import numpy as np
 
@@ -15,18 +12,9 @@ class ReplayBuffer:
     """Fixed-size buffer to store experience tuples."""
 
     def __init__(self, device, state_size, action_size, buffer_size):
-        """Initialize a ReplayBuffer object.
-
-        Params
-        ======
-            action_size (int): dimension of each action
-            buffer_size (int): maximum size of buffer
-            seed (int): random seed
-        """
         self.action_size = action_size
 
         self.last = 0
-        self.insert_at = 0
         self.p = np.empty((buffer_size,), dtype=np.float32)
         self.state = np.empty((buffer_size, state_size), dtype=np.float32)
         self.action = np.empty((buffer_size, action_size), dtype=np.int32)
@@ -43,11 +31,11 @@ class ReplayBuffer:
     def add(self, state, action, reward, next_state, done, p=1.0):
         """Add a new experience to memory."""
         if self.last < self.buffer_size:
+            i = self.last
             self.last += 1
-
-        i = self.insert_at
-        self.insert_at += 1
-        self.insert_at %= self.p.shape[0]
+        else:
+            # remove the least valuable memory
+            i = np.argmin(self.p)
 
         self.p[i] = p
         self.state[i, :] = state
@@ -76,7 +64,7 @@ class ReplayBuffer:
         p = torch.from_numpy(self.p[choices, np.newaxis]).float().to(
             self.device)
 
-        return (states, actions, rewards, next_states, dones, p)
+        return states, actions, rewards, next_states, dones, p
 
     def __len__(self):
         """Return the current size of internal memory."""
